@@ -1,0 +1,126 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.aleph0</groupId>
+    <artifactId>skein-spi</artifactId>
+    <version>0.0.0-SNAPSHOT</version>
+    <name>skein-spi</name>
+    <inceptionYear>2022</inceptionYear>
+    <description>Service Provider Interface for skein web processing API</description>
+    <url>https://github.com/aleph0/skein-spi</url>
+    <packaging>pom</packaging>
+
+    <organization>
+        <name>aleph0</name>
+        <url>https://aleph0.io/</url>
+    </organization>
+
+    <scm>
+        <connection>scm:git:ssh://git@github.com/aleph0io/skein-spi.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/aleph0io/skein-spi.git</developerConnection>
+        <url>https://github.com/aleph0io/skein-spi/tree/main</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <name>Andy Boothe</name>
+            <email>andy.boothe@gmail.com</email>
+        </developer>
+    </developers>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>aleph0</id>
+            <name>aleph0 Snapshot Repository</name>
+            <url>https://nexus.aleph0.io/repository/maven-snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>aleph0</id>
+            <name>aleph0 Release Repository</name>
+            <url>https://nexus.aleph0.io/repository/maven-releases/</url>
+        </repository>
+    </distributionManagement>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/aleph0io/skein-spi</url>
+    </issueManagement>
+
+    <properties>
+        <java.version>11</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <openapi.source.directory>${project.build.directory}/generated-sources/openapi</openapi.source.directory>
+    </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.10.1</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <release>${java.version}</release>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.openapitools</groupId>
+                    <artifactId>openapi-generator-maven-plugin</artifactId>
+                    <version>5.4.0</version>
+                    <executions>
+                        <execution>
+                            <id>generate</id>
+                            <goals>
+                                <goal>generate</goal>
+                            </goals>
+                            <configuration>
+                                <generatorName>jaxrs-spec</generatorName>
+                                <generateApis>false</generateApis>
+                                <generateModels>false</generateModels>
+                                <generateSupportingFiles>false</generateSupportingFiles>
+                                <output>${openapi.source.directory}</output>
+
+                                <configOptions>
+                                    <apiPackage>io.aleph0.skein.spi.service</apiPackage>
+                                    <modelPackage>io.aleph0.skein.spi.model</modelPackage>
+                                    <dateLibrary>java8</dateLibrary>
+                                    <returnResponse>false</returnResponse>
+                                    <interfaceOnly>true</interfaceOnly>
+                                    <useSwaggerAnnotations>false</useSwaggerAnnotations>
+
+                                    <importMappings>
+                                        <!-- type=import,type=import -->
+                                    </importMappings>
+
+                                    <typeMappings>
+                                        <!-- OpenAPIType=generatedType,OpenAPIType=generatedType -->
+                                    </typeMappings>
+                                </configOptions>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.dropwizard</groupId>
+                <artifactId>dropwizard-dependencies</artifactId>
+                <version>2.0.29</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <modules>
+        <module>skein-model</module>
+        <module>skein-service</module>
+    </modules>
+</project>

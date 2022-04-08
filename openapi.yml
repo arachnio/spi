@@ -1,0 +1,276 @@
+openapi: 3.0.2
+info:
+  title: aleph0 API
+  description: A web processing API
+  contact:
+    email: api@aleph0.io
+  version: 0.0.0
+servers:
+  - url: https://api.aleph0.io/v1
+tags:
+  - name: web
+    description: Manipulate web
+paths:
+  /links/parse:
+    post:
+      tags:
+        - web
+      summary: Parse a link
+      description: Parses an absolute hyperlink into its component parts
+      operationId: parseLink
+      requestBody:
+        description: The link to parse
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Link'
+      responses:
+        200:
+          description: The link was parsed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParsedLink'
+      security:
+        - apiKey: []
+  /links/parse/batch:
+    post:
+      tags:
+        - web
+      summary: Parse a batch of links
+      description: Parses a batch of absolute hyperlinks into their component parts
+      operationId: parseLinkBatch
+      requestBody:
+        description: The batch of links to parse
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkBatch'
+      responses:
+        200:
+          description: The links were parsed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParsedLinkBatch'
+      security:
+        - apiKey: []
+  /links/unwind:
+    post:
+      tags:
+        - web
+      summary: Unwind a link
+      description: Converts a link to its maximally unwound, and possibly canonical, form
+      operationId: unwindLink
+      x-async-enabled: true
+      requestBody:
+        description: The link to unwind
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Link'
+        required: true
+      responses:
+        200:
+          description: The link was canonicalized successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnwoundLink'
+      security:
+        - apiKey: []
+  /links/unwind/batch:
+    post:
+      tags:
+        - web
+      summary: Unwind a batch of links
+      description: Converts a batch of links to their maximally unwound, and possibly canonical, forms
+      operationId: unwindLinkBatch
+      x-async-enabled: true
+      requestBody:
+        description: The batch of links to unwind
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkBatch'
+        required: true
+      responses:
+        200:
+          description: The link was canonicalized successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnwoundLinkBatch'
+      security:
+        - apiKey: []
+components:
+  schemas:
+    Scheme:
+      type: string
+      enum:
+        - http
+        - https
+        
+    ParsedHostname:
+      type: object
+      required:
+        - topLevelDomain
+        - secondLevelDomain
+        - privateSuffix
+        - publicSuffix
+        - publicSlug
+        - hostname
+      properties:
+        topLevelDomain:
+          type: string
+        topLevelSlug:
+          type: string
+        secondLevelDomain:
+          type: string
+        secondLevelSlug:
+          type: string
+        privateSuffix:
+          type: string
+        publicSuffix:
+          type: string
+        publicSlug:
+          type: string
+        hostname:
+          type: string
+          
+    QueryParameter:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+          
+    ParsedLink:
+      type: object
+      required:
+        - url
+        - scheme
+        - hostname
+        - path
+      properties:
+        url:
+          type: string
+          format: url
+        scheme:
+          $ref: '#/components/schemas/Scheme'
+        hostname:
+          $ref: '#/components/schemas/ParsedHostname'
+        path:
+          type: string
+        queryParameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/QueryParameter'
+        anchor:
+          type: string
+
+    UnwoundLink:
+      type: object
+      required:
+        - original
+        - unwound
+        - canonical
+      properties:
+        original:
+          $ref: '#/components/schemas/ParsedLink'
+        unwound:
+          $ref: '#/components/schemas/ParsedLink'
+        canonical:
+          type: boolean
+
+    Link:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: url
+          nullable: false
+          maxLength: 2048
+          
+    LinkBatchEntry:
+      type: object
+      required:
+        - id
+        - web
+      properties:
+        id:
+          type: string
+          maxLength: 80
+        link:
+          $ref: '#/components/schemas/Link'
+
+    LinkBatch:
+      type: object
+      required:
+        - webs
+      properties:
+        links:
+          type: array
+          minLength: 1
+          maxLength: 25
+          items:
+            $ref: '#/components/schemas/LinkBatchEntry'
+
+    ParsedLinkBatchEntry:
+      type: object
+      required:
+        - id
+        - parsedLink
+      properties:
+        id:
+          type: string
+          maxLength: 80
+        parsedLink:
+          $ref: '#/components/schemas/ParsedLink'
+
+    ParsedLinkBatch:
+      type: object
+      required:
+        - parsedLinks
+      properties:
+        parsedLinks:
+          type: array
+          minLength: 1
+          maxLength: 25
+          items:
+            $ref: '#/components/schemas/ParsedLinkBatchEntry'
+            
+
+    UnwoundLinkBatchEntry:
+      type: object
+      required:
+        - id
+        - unwoundLink
+      properties:
+        id:
+          type: string
+          maxLength: 80
+        unwoundLink:
+          $ref: '#/components/schemas/UnwoundLink'
+
+    UnwoundLinkBatch:
+      type: object
+      required:
+        - unwoundLinks
+      properties:
+        unwoundLinks:
+          type: array
+          minLength: 1
+          maxLength: 25
+          items:
+            $ref: '#/components/schemas/UnwoundLinkBatchEntry'
+          
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      name: x-api-key
+      in: header
+
