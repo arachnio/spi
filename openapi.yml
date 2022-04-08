@@ -111,32 +111,66 @@ components:
         - http
         - https
         
-    ParsedHostname:
+    Authority:
       type: object
       required:
-        - topLevelDomain
-        - secondLevelDomain
-        - privateSuffix
-        - publicSuffix
-        - publicSlug
-        - hostname
+        - host
       properties:
-        topLevelDomain:
+        host:
+          $ref: '#/components/schemas/Host'
+        port:
+          type: integer
+          format: int32
+          
+    Host:
+      type: object
+      required:
+        - type
+      properties:
+        type:
           type: string
-        topLevelSlug:
-          type: string
-        secondLevelDomain:
-          type: string
-        secondLevelSlug:
-          type: string
-        privateSuffix:
-          type: string
-        publicSuffix:
-          type: string
-        publicSlug:
-          type: string
-        hostname:
-          type: string
+      discriminator:
+        propertyName: type
+        mapping:
+          hostname: '#/components/schemas/Hostname'
+          ipv4: '#/components/schemas/IpV4Address'
+          ipv6: '#/components/schemas/IpV6Address'
+          
+    Hostname:
+      allOf:
+        - $ref: '#/components/schemas/Host'
+        - type: object
+          required:
+            - registrySuffix
+            - publicSuffix
+            - hostname
+          properties:
+            registrySuffix:
+              type: string
+            publicSuffix:
+              type: string
+            hostname:
+              type: string
+          
+    IpV4Address:
+      allOf:
+        - $ref: '#/components/schemas/Host'
+        - type: object
+          required:
+            - address
+          properties:
+            address:
+              type: string
+          
+    IpV6Address:
+      allOf:
+        - $ref: '#/components/schemas/Host'
+        - type: object
+          required:
+            - address
+          properties:
+            address:
+              type: string
           
     QueryParameter:
       type: object
@@ -154,21 +188,30 @@ components:
         - hostname
         - path
       properties:
-        url:
+        link:
           type: string
           format: url
         scheme:
           $ref: '#/components/schemas/Scheme'
-        hostname:
-          $ref: '#/components/schemas/ParsedHostname'
+        authority:
+          $ref: '#/components/schemas/Authority'
         path:
           type: string
         queryParameters:
           type: array
           items:
             $ref: '#/components/schemas/QueryParameter'
-        anchor:
-          type: string
+            
+    UnwindingOutcome:
+      type: string
+      enum:
+        - success2xx
+        - failure4xx
+        - failure5xx
+        - timeout
+        - tooManyHops
+        - protocolError
+        - networkingError
 
     UnwoundLink:
       type: object
@@ -181,6 +224,8 @@ components:
           $ref: '#/components/schemas/ParsedLink'
         unwound:
           $ref: '#/components/schemas/ParsedLink'
+        outcome:
+          $ref: '#/components/schemas/UnwindingOutcome'
         canonical:
           type: boolean
 
@@ -212,7 +257,7 @@ components:
       required:
         - webs
       properties:
-        links:
+        entries:
           type: array
           minLength: 1
           maxLength: 25
@@ -236,7 +281,7 @@ components:
       required:
         - parsedLinks
       properties:
-        parsedLinks:
+        entries:
           type: array
           minLength: 1
           maxLength: 25
@@ -261,7 +306,7 @@ components:
       required:
         - unwoundLinks
       properties:
-        unwoundLinks:
+        entries:
           type: array
           minLength: 1
           maxLength: 25
