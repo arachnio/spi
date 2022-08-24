@@ -31,12 +31,12 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>aleph0</id>
+            <id>aleph0-snapshots</id>
             <name>aleph0 Snapshot Repository</name>
             <url>https://nexus.aleph0.io/repository/maven-snapshots/</url>
         </snapshotRepository>
         <repository>
-            <id>aleph0</id>
+            <id>aleph0-releases</id>
             <name>aleph0 Release Repository</name>
             <url>https://nexus.aleph0.io/repository/maven-releases/</url>
         </repository>
@@ -102,6 +102,15 @@
                             </configuration>
                         </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <configuration>
+                        <tagNameFormat>v@{project.version}</tagNameFormat>
+                        <autoVersionSubmodules>true</autoVersionSubmodules>
+                        <goals>deploy</goals>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
