@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.aleph0.skein</groupId>
         <artifactId>spi</artifactId>
-        <version>0.0.0-SNAPSHOT</version>
+        <version>0.0.0</version>
     </parent>
 
     <artifactId>model</artifactId>
