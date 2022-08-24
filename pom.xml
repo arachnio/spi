@@ -1,10 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.aleph0</groupId>
-    <artifactId>skein-spi</artifactId>
+    <groupId>io.aleph0.skein</groupId>
+    <artifactId>spi</artifactId>
     <version>0.0.0-SNAPSHOT</version>
-    <name>skein-spi</name>
+    <name>spi</name>
     <inceptionYear>2022</inceptionYear>
     <description>Service Provider Interface for skein web processing API</description>
     <url>https://github.com/aleph0/skein-spi</url>
@@ -120,7 +120,7 @@
     </dependencyManagement>
 
     <modules>
-        <module>skein-model</module>
-        <module>skein-service</module>
+        <module>model</module>
+        <module>service</module>
     </modules>
 </project>

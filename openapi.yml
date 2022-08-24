@@ -1,7 +1,7 @@
 openapi: 3.0.2
 info:
-  title: aleph0 API
-  description: A web processing API
+  title: Web Processing APIs
+  description: A collection of services for processing web pages and resources
   contact:
     email: api@aleph0.io
   version: 0.0.0
@@ -9,7 +9,7 @@ servers:
   - url: https://api.aleph0.io/v1
 tags:
   - name: web
-    description: Manipulate web
+    description: Endpoints for processing web pages and resources
 paths:
   /links/parse:
     post:
@@ -31,8 +31,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ParsedLink'
-      security:
-        - apiKey: []
   /links/parse/batch:
     post:
       tags:
@@ -53,14 +51,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ParsedLinkBatch'
-      security:
-        - apiKey: []
   /links/unwind:
     post:
       tags:
         - web
       summary: Unwind a link
-      description: Converts a link to its maximally unwound, and possibly canonical, form
+      description: Converts a link to its maximally unwound, and possibly canonical, form. For example, convert `https://nyti.ms/3rBgKkH` to `https://www.nytimes.com/2019/07/17/science/apollo-11-landing-anniversary.html`.
       operationId: unwindLink
       x-async-enabled: true
       requestBody:
@@ -77,8 +73,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnwoundLink'
-      security:
-        - apiKey: []
   /links/unwind/batch:
     post:
       tags:
@@ -101,17 +95,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnwoundLinkBatch'
-      security:
-        - apiKey: []
+  /links/extract:
+    post:
+      tags:
+        - web
+      summary: Extract a link
+      description: Unwinds a link and attempts to extract structured microdata and body content
+      operationId: extractLink
+      x-async-enabled: true
+      requestBody:
+        description: The link to extract
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Link'
+        required: true
+      responses:
+        200:
+          description: The link was extracted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtractedLink'
 components:
   schemas:
     Scheme:
+      description: An application-level protocol for exchanging hypermedia documents, namely http and https.
       type: string
       enum:
         - http
         - https
         
     Authority:
+      description: A URL authority consisting of a required host and optional port.
       type: object
       required:
         - host
@@ -119,15 +135,22 @@ components:
         host:
           $ref: '#/components/schemas/Host'
         port:
+          description: A TCP port number
+          example: 80
           type: integer
+          minimum: 0
+          maximum: 65353
           format: int32
           
     Host:
+      description: The coordinate of a specific destination on the internet
       type: object
       required:
         - type
       properties:
         type:
+          description: "The type of this host, one of: `hostname`, `ipv4`, `ipv6`"
+          example: hostname
           type: string
       discriminator:
         propertyName: type
@@ -139,23 +162,32 @@ components:
     Hostname:
       allOf:
         - $ref: '#/components/schemas/Host'
-        - type: object
+        - description: A hostname coordinate typically resolved with DNS, e.g. google.com
+          type: object
           required:
             - registrySuffix
             - publicSuffix
             - hostname
           properties:
             registrySuffix:
+              description: The top-level domain of this hostname
+              example: com
               type: string
             publicSuffix:
+              description: The top-level public suffix of this hostname
+              example: google.com
               type: string
             hostname:
+              description: The complete hostname
+              example: www.google.com
               type: string
           
     IpV4Address:
       allOf:
         - $ref: '#/components/schemas/Host'
-        - type: object
+        - description: An IPv4 address
+          example: 8.8.8.8
+          type: object
           required:
             - address
           properties:
@@ -165,7 +197,9 @@ components:
     IpV6Address:
       allOf:
         - $ref: '#/components/schemas/Host'
-        - type: object
+        - description: An IPv6 address, e.g. 
+          example: 2001:4860:4860::8888
+          type: object
           required:
             - address
           properties:
@@ -173,14 +207,22 @@ components:
               type: string
           
     QueryParameter:
+      description: A URL query parameter, e.g. `foo=bar`. All fields are urldecoded.
       type: object
+      required:
+        - name
       properties:
         name:
+          description: The name of the query parameter
+          example: foo
           type: string
         value:
+          description: The value of the query parameter
+          example: bar
           type: string
           
     ParsedLink:
+      description: A URL that has been parsed into its constituent parts
       type: object
       required:
         - url
@@ -189,6 +231,8 @@ components:
         - path
       properties:
         link:
+          description: The original link
+          example: https://www.google.com/search?q=hello
           type: string
           format: url
         scheme:
@@ -196,13 +240,32 @@ components:
         authority:
           $ref: '#/components/schemas/Authority'
         path:
+          description: The path from the original link
+          example: /search
           type: string
         queryParameters:
+          description: The list of query parameters from the original link
           type: array
           items:
             $ref: '#/components/schemas/QueryParameter'
-            
+
     UnwindingOutcome:
+      description: >
+        A description of the final outcome of unwinding a link
+        
+        * `success2xx` -- The final hop completed with a 2xx status code. This typically indicates a successful unwinding.
+        
+        * `failure4xx` -- The unwinding failed due to a 4xx status code.
+        
+        * `failure5xx` -- The unwinding failed due to a 5xx status code.
+        
+        * `timeout` -- The unwinding failed because it took too long.
+        
+        * `tooManyHops` -- The unwinding failed due to too many hops.
+        
+        * `protocolError` -- The unwinding failed because the server(s) did not follow the HTTP protocol.
+        
+        * `networkingError` -- The unwinding failed due to an I/O error.
       type: string
       enum:
         - success2xx
@@ -214,6 +277,7 @@ components:
         - networkingError
 
     UnwoundLink:
+      description: The result of a link unwinding operation
       type: object
       required:
         - original
@@ -227,69 +291,155 @@ components:
         outcome:
           $ref: '#/components/schemas/UnwindingOutcome'
         canonical:
+          description: Either `true` if the unwound URL is canonical, or `false` otherwise. A URL is canonical if and only if the outcome is `success2xx` and the final entity is an HTML document that contains a canonical meta link.
+          example: true
           type: boolean
+          
+    ImageMetadata:
+      description: An extracted image
+      type: object
+      properties:
+        url:
+          description: The location of the file
+          example: https://www.example.com/path/to/image.jpg
+          type: string
+          format: url
+        width:
+          description: The natural width of the image, in pixels
+          example: 640
+          type: integer
+          format: int32
+        height:
+          description: The natural height of the image, in pixels
+          example: 480
+          type: integer
+          format: int32
+          
+    PageType:
+      description: >
+        The detected type of an extracted page
+
+        * `article` -- The page is standalone article
+      type: string
+      enum:
+        - article
+          
+    PageMetadata:
+      description: A description of an extracted page
+      type: object
+      properties:
+        pageType:
+          $ref: '#/components/schemas/PageType'
+        title:
+          description: The title of the page
+          example: "Men Walk On Moon"
+          type: string
+          maxLength: 256
+        thumbnail:
+          $ref: '#/components/schemas/ImageMetadata'
+        author:
+          description: The name of the page's author. If there is more than one author, then only the first is listed.
+          example: "John Noble Wilford"
+          type: string
+        description:
+          description: A description of the content of the page.
+          example: "Houston, Monday, July 21--Men have landed and walked on the moon. Two Americans, astronauts of Apollo 11, steered their fragile four-legged lunar module safely and smoothly to the historic landing yesterday at 4:17:40 P.M., Eastern daylight time."
+          type: string
+          maxLength: 1024
+        publishedAt:
+          description: The timestamp when the page was originally published.
+          example: "1969-07-21T00:00:00Z"
+          type: string
+          format: date-time
+        body:
+          description: The contents of the page body. It may be truncated and sanitized.
+          type: string
+          maxLength: 65536
+          
+    ExtractedLink:
+      description: A description of an extracted link
+      type: object
+      required:
+        - link
+        - metadata
+      properties:
+        link:
+          $ref: '#/components/schemas/UnwoundLink'
+        metadata:
+          $ref: '#/components/schemas/PageMetadata'
 
     Link:
+      description: A hyperlink for parsing, extracting, etc.
       type: object
       required:
         - url
       properties:
         url:
+          description: The hyperlink
+          example: https://www.nytimes.com/2019/07/17/science/apollo-11-landing-anniversary.html
           type: string
           format: url
           nullable: false
           maxLength: 2048
           
     LinkBatchEntry:
+      description: An entry in a batch of links
       type: object
       required:
         - id
-        - web
+        - link
       properties:
         id:
+          description: An ID for this entry. It must be unique within its batch.
           type: string
           maxLength: 80
         link:
           $ref: '#/components/schemas/Link'
 
     LinkBatch:
+      description: A batch of links
       type: object
       required:
-        - webs
+        - entries
       properties:
         entries:
+          description: The links
           type: array
           minLength: 1
-          maxLength: 25
+          maxLength: 20
           items:
             $ref: '#/components/schemas/LinkBatchEntry'
 
     ParsedLinkBatchEntry:
+      description: An entry in a batch of parsed links
       type: object
       required:
         - id
         - parsedLink
       properties:
         id:
+          description: An ID for this entry. It must be unique within its batch.
           type: string
           maxLength: 80
         parsedLink:
           $ref: '#/components/schemas/ParsedLink'
 
     ParsedLinkBatch:
+      description: A batch of parsed links
       type: object
       required:
-        - parsedLinks
+        - entries
       properties:
         entries:
+          description: The parsed links
           type: array
           minLength: 1
-          maxLength: 25
+          maxLength: 20
           items:
             $ref: '#/components/schemas/ParsedLinkBatchEntry'
             
-
     UnwoundLinkBatchEntry:
+      description: An entry in a batch of parsed links
       type: object
       required:
         - id
@@ -302,20 +452,15 @@ components:
           $ref: '#/components/schemas/UnwoundLink'
 
     UnwoundLinkBatch:
+      description: A batch of unwound links
       type: object
       required:
-        - unwoundLinks
+        - entries
       properties:
         entries:
+          description: The unwound links
           type: array
           minLength: 1
-          maxLength: 25
+          maxLength: 20
           items:
             $ref: '#/components/schemas/UnwoundLinkBatchEntry'
-          
-  securitySchemes:
-    apiKey:
-      type: apiKey
-      name: x-api-key
-      in: header
-

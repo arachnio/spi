@@ -2,13 +2,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.aleph0</groupId>
-        <artifactId>skein-spi</artifactId>
+        <groupId>io.aleph0.skein</groupId>
+        <artifactId>spi</artifactId>
         <version>0.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>skein-service</artifactId>
-    <name>skein-service</name>
+    <artifactId>model</artifactId>
+    <name>model</name>
 
     <build>
         <plugins>
@@ -23,8 +23,7 @@
                         </goals>
                         <configuration>
                             <inputSpec>${project.basedir}/../openapi.yml</inputSpec>
-                            <generateApis>true</generateApis>
-                            <templateDirectory>openapi/templates</templateDirectory>
+                            <generateModels>true</generateModels>
                         </configuration>
                     </execution>
                 </executions>
@@ -52,13 +51,16 @@
 
     <dependencies>
         <dependency>
-            <groupId>jakarta.ws.rs</groupId>
-            <artifactId>jakarta.ws.rs-api</artifactId>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.aleph0</groupId>
-            <artifactId>skein-model</artifactId>
-            <version>${project.version}</version>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
         </dependency>
     </dependencies>
 </project>
