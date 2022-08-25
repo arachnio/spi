@@ -3,18 +3,60 @@ info:
   title: Web Processing APIs
   description: A collection of services for processing web pages and resources
   contact:
-    email: api@aleph0.io
+    email: api@arachn.io
   version: 0.0.0
 servers:
-  - url: https://api.aleph0.io/v1
+  - url: https://api.arachn.io/v1
 tags:
-  - name: web
-    description: Endpoints for processing web pages and resources
+  - name: link
+    description: Endpoints for processing hyperlinks
+  - name: domain
+    description: Endpoints for processing domain names
 paths:
+  /domains/parse:
+    post:
+      tags:
+        - domain
+      summary: Parse a domain name
+      description: Parses a domain name into its component parts
+      operationId: parseDomainName
+      requestBody:
+        description: The domain name to parse
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainName'
+      responses:
+        200:
+          description: The domain name was parsed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParsedDomainName'
+  /domains/parse/batch:
+    post:
+      tags:
+        - domain
+      summary: Parse a batch of domain names
+      description: Parses a batch of domain names into their component parts
+      operationId: parseDomainNameBatch
+      requestBody:
+        description: The batch of domain names to parse
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainNameBatch'
+      responses:
+        200:
+          description: The domain names were parsed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParsedDomainNameBatch'
   /links/parse:
     post:
       tags:
-        - web
+        - link
       summary: Parse a link
       description: Parses an absolute hyperlink into its component parts
       operationId: parseLink
@@ -34,7 +76,7 @@ paths:
   /links/parse/batch:
     post:
       tags:
-        - web
+        - link
       summary: Parse a batch of links
       description: Parses a batch of absolute hyperlinks into their component parts
       operationId: parseLinkBatch
@@ -54,7 +96,7 @@ paths:
   /links/unwind:
     post:
       tags:
-        - web
+        - link
       summary: Unwind a link
       description: Converts a link to its maximally unwound, and possibly canonical, form. For example, convert `https://nyti.ms/3rBgKkH` to `https://www.nytimes.com/2019/07/17/science/apollo-11-landing-anniversary.html`.
       operationId: unwindLink
@@ -76,7 +118,7 @@ paths:
   /links/unwind/batch:
     post:
       tags:
-        - web
+        - link
       summary: Unwind a batch of links
       description: Converts a batch of links to their maximally unwound, and possibly canonical, forms
       operationId: unwindLinkBatch
@@ -98,7 +140,7 @@ paths:
   /links/extract:
     post:
       tags:
-        - web
+        - link
       summary: Extract a link
       description: Unwinds a link and attempts to extract structured microdata and body content
       operationId: extractLink
@@ -149,40 +191,26 @@ components:
         - type
       properties:
         type:
-          description: "The type of this host, one of: `hostname`, `ipv4`, `ipv6`"
-          example: hostname
+          description: "The type of this host, one of: `domain`, `ipv4`, `ipv6`"
+          example: domain
           type: string
       discriminator:
         propertyName: type
         mapping:
-          hostname: '#/components/schemas/Hostname'
-          ipv4: '#/components/schemas/IpV4Address'
-          ipv6: '#/components/schemas/IpV6Address'
+          domain: '#/components/schemas/DomainNameHost'
+          ipv4: '#/components/schemas/IpV4AddressHost'
+          ipv6: '#/components/schemas/IpV6AddressHost'
           
-    Hostname:
+    DomainNameHost:
       allOf:
         - $ref: '#/components/schemas/Host'
-        - description: A hostname coordinate typically resolved with DNS, e.g. google.com
+        - description: A domain name coordinate typically resolved with DNS, e.g. www.google.com
           type: object
-          required:
-            - registrySuffix
-            - publicSuffix
-            - hostname
           properties:
-            registrySuffix:
-              description: The top-level domain of this hostname
-              example: com
-              type: string
-            publicSuffix:
-              description: The top-level public suffix of this hostname
-              example: google.com
-              type: string
-            hostname:
-              description: The complete hostname
-              example: www.google.com
-              type: string
+            domain:
+              $ref: '#/components/schemas/ParsedDomainName'
           
-    IpV4Address:
+    IpV4AddressHost:
       allOf:
         - $ref: '#/components/schemas/Host'
         - description: An IPv4 address
@@ -194,7 +222,7 @@ components:
             address:
               type: string
           
-    IpV6Address:
+    IpV6AddressHost:
       allOf:
         - $ref: '#/components/schemas/Host'
         - description: An IPv6 address, e.g. 
@@ -220,14 +248,35 @@ components:
           description: The value of the query parameter
           example: bar
           type: string
+
+    ParsedDomainName:
+      type: object
+      required:
+        - registrySuffix
+        - publicSuffix
+        - hostname
+      properties:
+        registrySuffix:
+          description: The top-level domain of this hostname
+          example: com
+          type: string
+        publicSuffix:
+          description: The top-level public suffix of this hostname
+          example: google.com
+          type: string
+        hostname:
+          description: The complete domain name
+          example: www.google.com
+          type: string
+          format: hostname
           
     ParsedLink:
       description: A URL that has been parsed into its constituent parts
       type: object
       required:
-        - url
+        - link
         - scheme
-        - hostname
+        - authority
         - path
       properties:
         link:
@@ -368,6 +417,76 @@ components:
         metadata:
           $ref: '#/components/schemas/PageMetadata'
 
+    DomainName:
+      description: A domain name for parsing, etc.
+      type: object
+      required:
+        - hostname
+      properties:
+        hostname:
+          description: The hostname to parse
+          example: www.google.com
+          type: string
+          format: hostname
+          nullable: false
+          maxLength: 253
+
+    DomainNameBatchEntry:
+      description: An entry in a batch of domain names
+      type: object
+      required:
+        - id
+        - domain
+      properties:
+        id:
+          description: An ID for this entry. It must be unique within its batch.
+          type: string
+          maxLength: 80
+        domain:
+          $ref: '#/components/schemas/DomainName'
+
+    DomainNameBatch:
+      description: A batch of domain names
+      type: object
+      required:
+        - entries
+      properties:
+        entries:
+          description: The domain names
+          type: array
+          minLength: 1
+          maxLength: 10
+          items:
+            $ref: '#/components/schemas/DomainNameBatchEntry'
+            
+    ParsedDomainNameBatchEntry:
+      description: An entry in a batch of parsed domain names
+      type: object
+      required:
+        - id
+        - parsedDomain
+      properties:
+        id:
+          description: An ID for this entry. It must be unique within its batch.
+          type: string
+          maxLength: 80
+        parsedDomain:
+          $ref: '#/components/schemas/ParsedDomainName'
+
+    ParsedDomainNameBatch:
+      description: A batch of parsed domain names
+      type: object
+      required:
+        - entries
+      properties:
+        entries:
+          description: The parsed domain names
+          type: array
+          minLength: 1
+          maxLength: 10
+          items:
+            $ref: '#/components/schemas/ParsedDomainNameBatchEntry'
+            
     Link:
       description: A hyperlink for parsing, extracting, etc.
       type: object
@@ -406,7 +525,7 @@ components:
           description: The links
           type: array
           minLength: 1
-          maxLength: 20
+          maxLength: 10
           items:
             $ref: '#/components/schemas/LinkBatchEntry'
 
@@ -434,7 +553,7 @@ components:
           description: The parsed links
           type: array
           minLength: 1
-          maxLength: 20
+          maxLength: 10
           items:
             $ref: '#/components/schemas/ParsedLinkBatchEntry'
             
@@ -461,6 +580,6 @@ components:
           description: The unwound links
           type: array
           minLength: 1
-          maxLength: 20
+          maxLength: 10
           items:
             $ref: '#/components/schemas/UnwoundLinkBatchEntry'
