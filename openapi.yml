@@ -1,10 +1,10 @@
 openapi: 3.0.2
 info:
-  title: Web Processing APIs
-  description: A collection of services for processing web pages and resources
+  title: Arachnio API
+  description: Arachnio is an API product for creating structured data from the web.
   contact:
     email: api@arachn.io
-  version: 0.0.0
+  version: 0.1.0
 servers:
   - url: https://api.arachn.io/v1
 tags:
@@ -281,7 +281,7 @@ components:
       properties:
         link:
           description: The original link
-          example: https://www.google.com/search?q=hello
+          example: https://www.nytimes.com/2019/07/17/science/apollo-11-landing-anniversary.html
           type: string
           format: url
         scheme:
@@ -290,7 +290,7 @@ components:
           $ref: '#/components/schemas/Authority'
         path:
           description: The path from the original link
-          example: /search
+          example: /2019/07/17/science/apollo-11-landing-anniversary.html
           type: string
         queryParameters:
           description: The list of query parameters from the original link
@@ -299,21 +299,15 @@ components:
             $ref: '#/components/schemas/QueryParameter'
 
     UnwindingOutcome:
-      description: >
+      description: |
         A description of the final outcome of unwinding a link
         
         * `success2xx` -- The final hop completed with a 2xx status code. This typically indicates a successful unwinding.
-        
         * `failure4xx` -- The unwinding failed due to a 4xx status code.
-        
         * `failure5xx` -- The unwinding failed due to a 5xx status code.
-        
         * `timeout` -- The unwinding failed because it took too long.
-        
         * `tooManyHops` -- The unwinding failed due to too many hops.
-        
         * `protocolError` -- The unwinding failed because the server(s) did not follow the HTTP protocol.
-        
         * `networkingError` -- The unwinding failed due to an I/O error.
       type: string
       enum:
@@ -364,47 +358,115 @@ components:
           type: integer
           format: int32
           
-    PageType:
-      description: >
-        The detected type of an extracted page
-
-        * `article` -- The page is standalone article
-      type: string
-      enum:
-        - article
-          
-    PageMetadata:
+    EntityMetadata:
       description: A description of an extracted page
       type: object
       properties:
-        pageType:
-          $ref: '#/components/schemas/PageType'
-        title:
-          description: The title of the page
-          example: "Men Walk On Moon"
+        entityType:
+          description: The type of this page, e.g., "webpage". For reasons of future-proofing, applications should ignore values they do not recognize.
+          example: "webpage"
           type: string
-          maxLength: 256
-        thumbnail:
-          $ref: '#/components/schemas/ImageMetadata'
-        author:
-          description: The name of the page's author. If there is more than one author, then only the first is listed.
+      discriminator:
+        propertyName: entityType
+        mapping:
+          unrecognized: '#/components/schemas/UnrecognizedEntityMetadata'
+          webpage: '#/components/schemas/WebpageEntityMetadata'
+          
+    UnrecognizedEntityMetadata:
+      allOf:
+        - $ref: '#/components/schemas/EntityMetadata'
+        - type: object
+          
+    WebpageEntityMetadata:
+      allOf:
+        - $ref: '#/components/schemas/EntityMetadata'
+        - type: object
+          properties:
+            webpageType:
+              description: The type of this webpage, e.g., "article". For reasons of future-proofing, applications should ignore values they do not recognize.
+              example: "article"
+              type: string
+            title:
+              description: The title of the page
+              example: "Men Walk On Moon"
+              type: string
+              maxLength: 256
+            thumbnail:
+              $ref: '#/components/schemas/ImageMetadata'
+            description:
+              description: A description of the content of the page.
+              example: "Houston, Monday, July 21--Men have landed and walked on the moon. Two Americans, astronauts of Apollo 11, steered their fragile four-legged lunar module safely and smoothly to the historic landing yesterday at 4:17:40 P.M., Eastern daylight time."
+              type: string
+              maxLength: 1024
+      discriminator:
+        propertyName: webpageType
+        mapping:
+          article: '#/components/schemas/ArticleWebpageEntityMetadata'
+          standard: '#/components/schemas/StandardWebpageEntityMetadata'
+          
+    StandardWebpageEntityMetadata:
+      allOf:
+        - $ref: '#/components/schemas/WebpageEntityMetadata'
+        - type: object
+        
+    Hyperlink:
+      type: object
+      properties:
+        href:
+          $ref: '#/components/schemas/ParsedLink'
+        rel:
+          type: string
+          description: The value of the `rel` attribute, e.g., `nofollow`, `author`, etc.
+        outlink:
+          type: boolean
+          description: Whether or not this link's destination points to a separate site
+        anchorText:
+          type: string
+          description: The text content of this link's tag
+          
+    ArticleAuthor:
+      type: object
+      properties:
+        name:
+          description: The author's name
           example: "John Noble Wilford"
           type: string
-        description:
-          description: A description of the content of the page.
-          example: "Houston, Monday, July 21--Men have landed and walked on the moon. Two Americans, astronauts of Apollo 11, steered their fragile four-legged lunar module safely and smoothly to the historic landing yesterday at 4:17:40 P.M., Eastern daylight time."
-          type: string
-          maxLength: 1024
-        publishedAt:
-          description: The timestamp when the page was originally published.
-          example: "1969-07-21T00:00:00Z"
-          type: string
-          format: date-time
-        body:
-          description: The contents of the page body. It may be truncated and sanitized.
-          type: string
-          maxLength: 65536
-          
+
+    ArticleWebpageEntityMetadata:
+      allOf:
+        - $ref: '#/components/schemas/WebpageEntityMetadata'
+        - type: object
+          properties:
+            keywords:
+              type: array
+              items:
+                type: string
+            author:
+              $ref: '#/components/schemas/ArticleAuthor'
+            publishedAt:
+              description: The timestamp when the page was originally published.
+              example: "1969-07-21T00:00:00Z"
+              type: string
+              format: date-time
+            modifiedAt:
+              description: The timestamp when the page was most recently modified.
+              example: "1969-07-21T00:00:00Z"
+              type: string
+              format: date-time
+            bodyHtml:
+              description: The sanitized contents of the page body. It may be truncated. Will always be a valid HTML fragment.
+              type: string
+              maxLength: 32768
+            bodyText:
+              description: The contents of the page body. It may be truncated.
+              type: string
+              maxLength: 32768
+            bodyLinks:
+              description: The list of hyperlinks embedded in this page's body content.
+              type: array
+              items:
+                $ref: '#/components/schemas/Hyperlink'
+            
     ExtractedLink:
       description: A description of an extracted link
       type: object
@@ -414,8 +476,8 @@ components:
       properties:
         link:
           $ref: '#/components/schemas/UnwoundLink'
-        metadata:
-          $ref: '#/components/schemas/PageMetadata'
+        entity:
+          $ref: '#/components/schemas/EntityMetadata'
 
     DomainName:
       description: A domain name for parsing, etc.
@@ -455,7 +517,7 @@ components:
           description: The domain names
           type: array
           minLength: 1
-          maxLength: 10
+          maxLength: 100
           items:
             $ref: '#/components/schemas/DomainNameBatchEntry'
             
@@ -525,7 +587,7 @@ components:
           description: The links
           type: array
           minLength: 1
-          maxLength: 10
+          maxLength: 100
           items:
             $ref: '#/components/schemas/LinkBatchEntry'
 

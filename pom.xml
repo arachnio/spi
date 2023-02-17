@@ -3,7 +3,7 @@
 
     <groupId>io.aleph0.skein</groupId>
     <artifactId>spi</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <name>spi</name>
     <inceptionYear>2022</inceptionYear>
     <description>Service Provider Interface for skein web processing API</description>
