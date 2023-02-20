@@ -1,13 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.aleph0.skein</groupId>
+    <groupId>io.arachn</groupId>
     <artifactId>spi</artifactId>
     <version>0.1.1-SNAPSHOT</version>
     <name>spi</name>
     <inceptionYear>2022</inceptionYear>
     <description>Service Provider Interface for skein web processing API</description>
-    <url>https://github.com/aleph0/skein-spi</url>
+    <url>https://github.com/arachnio/spi</url>
     <packaging>pom</packaging>
 
     <organization>
@@ -16,46 +16,87 @@
     </organization>
 
     <scm>
-        <connection>scm:git:ssh://git@github.com/aleph0io/skein-spi.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/aleph0io/skein-spi.git</developerConnection>
-        <url>https://github.com/aleph0io/skein-spi/tree/main</url>
+        <connection>scm:git:ssh://git@github.com/arachnio/spi.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/arachnio/spi.git</developerConnection>
+        <url>https://github.com/arachnio/spi/tree/main</url>
         <tag>HEAD</tag>
     </scm>
 
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+    
     <developers>
         <developer>
             <name>Andy Boothe</name>
-            <email>andy.boothe@gmail.com</email>
+            <email>andy@aleph0.io</email>
         </developer>
     </developers>
 
     <distributionManagement>
         <snapshotRepository>
-            <id>aleph0-snapshots</id>
-            <name>aleph0 Snapshot Repository</name>
-            <url>https://nexus.aleph0.io/repository/maven-snapshots/</url>
+            <id>ossrh</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
         </snapshotRepository>
         <repository>
-            <id>aleph0-releases</id>
-            <name>aleph0 Release Repository</name>
-            <url>https://nexus.aleph0.io/repository/maven-releases/</url>
+            <id>ossrh</id>
+            <name>Nexus Release Repository</name>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/aleph0io/skein-spi</url>
+        <url>https://github.com/arachnio/spi</url>
     </issueManagement>
 
     <properties>
-        <java.version>11</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>11</java.version>
         <openapi.source.directory>${project.build.directory}/generated-sources/openapi</openapi.source.directory>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.organization>arachnio</sonar.organization>
+        <sonar.exclusions>
+            **/pom.xml
+        </sonar.exclusions>
     </properties>
 
     <build>
         <pluginManagement>
-            <plugins>
+          <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.0.0</version>
+                <configuration>
+                    <verbose>false</verbose>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>update-file-header</id>
+                        <goals>
+                            <goal>update-file-header</goal>
+                        </goals>
+                        <phase>process-sources</phase>
+                        <configuration>
+                            <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+                            <processStartTag>=================================LICENSE_START==================================</processStartTag>
+                            <processEndTag>==================================LICENSE_END===================================</processEndTag>
+                            <sectionDelimiter>====================================SECTION=====================================</sectionDelimiter>
+                            <licenseName>apache_v2</licenseName>
+                            <roots>
+                                <root>src/main/java</root>
+                                <root>src/test/java</root>
+                            </roots>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -84,8 +125,8 @@
                                 <output>${openapi.source.directory}</output>
 
                                 <configOptions>
-                                    <apiPackage>io.aleph0.skein.spi.service</apiPackage>
-                                    <modelPackage>io.aleph0.skein.spi.model</modelPackage>
+                                    <apiPackage>io.arachn.spi.service</apiPackage>
+                                    <modelPackage>io.arachn.spi.model</modelPackage>
                                     <dateLibrary>java8</dateLibrary>
                                     <returnResponse>false</returnResponse>
                                     <interfaceOnly>true</interfaceOnly>
@@ -132,4 +173,75 @@
         <module>model</module>
         <module>service</module>
     </modules>
+
+      <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <failOnError>false</failOnError>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <configuration>
+                            <tagNameFormat>v@{project.version}</tagNameFormat>
+                            <autoVersionSubmodules>true</autoVersionSubmodules>
+                            <useReleaseProfile>false</useReleaseProfile>
+                            <releaseProfiles>release</releaseProfiles>
+                            <goals>deploy</goals>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
