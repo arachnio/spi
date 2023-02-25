@@ -3,7 +3,7 @@
 
     <groupId>io.arachn</groupId>
     <artifactId>spi</artifactId>
-    <version>0.1.2-SNAPSHOT</version>
+    <version>0.1.2</version>
     <name>spi</name>
     <inceptionYear>2022</inceptionYear>
     <description>Service Provider Interface for skein web processing API</description>
@@ -19,7 +19,7 @@
         <connection>scm:git:ssh://git@github.com/arachnio/spi.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/arachnio/spi.git</developerConnection>
         <url>https://github.com/arachnio/spi/tree/main</url>
-        <tag>HEAD</tag>
+        <tag>v0.1.2</tag>
     </scm>
 
     <licenses>
