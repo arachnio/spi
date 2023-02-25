@@ -20,8 +20,6 @@
 package io.arachn.spi.model.serialization;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import io.arachn.spi.model.EntityMetadata;
-import io.arachn.spi.model.UnrecognizedEntityMetadata;
 import io.arachn.spi.model.WebpageEntityMetadata;
 import io.arachn.spi.model.serialization.deser.MultiLevelInheritanceDeserializer;
 
@@ -30,8 +28,6 @@ public class ArachnioModule extends SimpleModule {
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   public ArachnioModule() {
-    addDeserializer((Class) EntityMetadata.class, new MultiLevelInheritanceDeserializer());
-    addDeserializer((Class) UnrecognizedEntityMetadata.class, new MultiLevelInheritanceDeserializer());
     addDeserializer((Class) WebpageEntityMetadata.class, new MultiLevelInheritanceDeserializer());
-  }  
+  }
 }
