@@ -25,19 +25,19 @@ import java.io.IOException;
 import org.junit.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.arachn.spi.model.ExtractedLink;
-import io.arachn.spi.model.UnrecognizedEntityMetadata;
-import io.arachn.spi.model.serialization.ArachnioModule;
+import io.arachn.spi.model.OtherEntityMetadata;
+import io.arachn.spi.model.serialization.ArachnioClientModule;
 
 public class MultiLevelInheritanceDeserializerTest {
-  public static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new ArachnioModule());
+  public static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new ArachnioClientModule());
 
   @Test
   public void test() throws IOException {
     String json =
-        "{\"link\":{\"original\":{\"link\":\"http://www.feedingamerica.org/penny\",\"scheme\":\"http\",\"authority\":{\"host\":{\"type\":\"domain\",\"domain\":{\"registrySuffix\":\"org\",\"publicSuffix\":\"feedingamerica.org\",\"hostname\":\"www.feedingamerica.org\"}},\"port\":null},\"path\":\"/penny\",\"queryParameters\":[]},\"unwound\":null,\"outcome\":\"networkingError\",\"canonical\":null},\"entity\":{\"entityType\":\"unrecognized\"}}";
+        "{\"link\":{\"original\":{\"link\":\"http://www.feedingamerica.org/penny\",\"scheme\":\"http\",\"authority\":{\"host\":{\"type\":\"domain\",\"domain\":{\"registrySuffix\":\"org\",\"publicSuffix\":\"feedingamerica.org\",\"hostname\":\"www.feedingamerica.org\"}},\"port\":null},\"path\":\"/penny\",\"queryParameters\":[]},\"unwound\":null,\"outcome\":\"networkingError\",\"canonical\":null},\"entity\":{\"entityType\":\"other\"}}";
 
     ExtractedLink link = MAPPER.readValue(json, ExtractedLink.class);
 
-    assertThat(link.getEntity(), instanceOf(UnrecognizedEntityMetadata.class));
+    assertThat(link.getEntity(), instanceOf(OtherEntityMetadata.class));
   }
 }

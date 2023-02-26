@@ -4,7 +4,7 @@ info:
   description: Arachnio is an API product for creating structured data from the web.
   contact:
     email: api@arachn.io
-  version: 0.1.0
+  version: 0.1.3
 servers:
   - url: https://api.arachn.io/v1
 tags:
@@ -369,13 +369,30 @@ components:
       discriminator:
         propertyName: entityType
         mapping:
-          unrecognized: '#/components/schemas/UnrecognizedEntityMetadata'
+          other: '#/components/schemas/OtherEntityMetadata'
           webpage: '#/components/schemas/WebpageEntityMetadata'
           
-    UnrecognizedEntityMetadata:
+    OtherEntityMetadata:
       allOf:
         - $ref: '#/components/schemas/EntityMetadata'
         - type: object
+
+    LanguageTag:
+      type: object
+      description: "A (partial) RFC 5646/BCP 47 language code"
+      required:
+        - language
+      properties:
+        language:
+          type: string
+          description: An ISO 639-1 language code
+          example: "en"
+          maxLength: 2
+        country:
+          type: string
+          description: An ISO 3166-1 Alpha 2 country code
+          example: "US"
+          maxLength: 2
           
     WebpageEntityMetadata:
       allOf:
@@ -386,6 +403,8 @@ components:
               description: The type of this webpage, e.g., "article". For reasons of future-proofing, applications should ignore values they do not recognize.
               example: "article"
               type: string
+            language:
+              $ref: '#/components/schemas/LanguageTag'
             title:
               description: The title of the page
               example: "Men Walk On Moon"
@@ -402,9 +421,9 @@ components:
         propertyName: webpageType
         mapping:
           article: '#/components/schemas/ArticleWebpageEntityMetadata'
-          standard: '#/components/schemas/StandardWebpageEntityMetadata'
+          other: '#/components/schemas/OtherWebpageEntityMetadata'
           
-    StandardWebpageEntityMetadata:
+    OtherWebpageEntityMetadata:
       allOf:
         - $ref: '#/components/schemas/WebpageEntityMetadata'
         - type: object

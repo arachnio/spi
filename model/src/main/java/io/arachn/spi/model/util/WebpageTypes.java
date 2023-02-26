@@ -17,17 +17,21 @@
  * limitations under the License.
  * ==================================LICENSE_END===================================
  */
-package io.arachn.spi.model.serialization;
+package io.arachn.spi.model.util;
 
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import io.arachn.spi.model.WebpageEntityMetadata;
-import io.arachn.spi.model.serialization.deser.MultiLevelInheritanceDeserializer;
+import io.arachn.spi.model.ArticleWebpageEntityMetadata;
+import io.arachn.spi.model.OtherWebpageEntityMetadata;
 
-public class ArachnioModule extends SimpleModule {
-  private static final long serialVersionUID = 1260684766179870205L;
+public final class WebpageTypes {
+  private WebpageTypes() {}
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  public ArachnioModule() {
-    addDeserializer((Class) WebpageEntityMetadata.class, new MultiLevelInheritanceDeserializer());
-  }
+  /**
+   * @see ArticleWebpageEntityMetadata
+   */
+  public static final String ARTICLE = "article";
+
+  /**
+   * @see OtherWebpageEntityMetadata
+   */
+  public static final String OTHER = "other";
 }
