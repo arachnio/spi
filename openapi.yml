@@ -4,7 +4,7 @@ info:
   description: Arachnio is an API product for creating structured data from the web.
   contact:
     email: api@arachn.io
-  version: 0.1.3
+  version: 0.1.4
 servers:
   - url: https://api.arachn.io/v1
 tags:
@@ -377,11 +377,8 @@ components:
         - $ref: '#/components/schemas/EntityMetadata'
         - type: object
 
-    LanguageTag:
+    Locale:
       type: object
-      description: "A (partial) RFC 5646/BCP 47 language code"
-      required:
-        - language
       properties:
         language:
           type: string
@@ -403,8 +400,8 @@ components:
               description: The type of this webpage, e.g., "article". For reasons of future-proofing, applications should ignore values they do not recognize.
               example: "article"
               type: string
-            language:
-              $ref: '#/components/schemas/LanguageTag'
+            locale:
+              $ref: '#/components/schemas/Locale'
             title:
               description: The title of the page
               example: "Men Walk On Moon"
