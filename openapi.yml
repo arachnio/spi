@@ -4,7 +4,7 @@ info:
   description: Arachnio is an API product for creating structured data from the web.
   contact:
     email: api@arachn.io
-  version: 0.1.4
+  version: 0.1.5
 servers:
   - url: https://api.arachn.io/v1
 tags:
@@ -391,6 +391,11 @@ components:
           example: "US"
           maxLength: 2
           
+    MetaTag:
+      type: object
+      additionalProperties:
+        type: string
+          
     WebpageEntityMetadata:
       allOf:
         - $ref: '#/components/schemas/EntityMetadata'
@@ -407,6 +412,10 @@ components:
               example: "Men Walk On Moon"
               type: string
               maxLength: 256
+            metaTags:
+              type: array
+              items:
+                $ref: '#/components/schemas/MetaTag'
             thumbnail:
               $ref: '#/components/schemas/ImageMetadata'
             description:
